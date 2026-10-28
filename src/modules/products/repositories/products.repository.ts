@@ -2,37 +2,38 @@ import { Injectable } from "@nestjs/common";
 import { Product } from "../entities/product.entity";
 import { CreateProductDTO } from "../dto/product.dto";
 import { UpdateProductDto } from "../dto/update-product.dto";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 
 @Injectable()
 export class ProductsRepository{
-  private products: Product[]= [];
-  private nextId= 1;
+  constructor(
+    @InjectRepository(Product)
+    private readonly repo: Repository<Product>,
+  ){}
 
-  findAll(): Product[]{
-    return this.products;
+  findAll(): Promise<Product[]> {
+    return this.repo.find();
   }
 
-  findOne(id: number): Product | undefined{
-    return this.products.find((product) => product.id === id);
+  findOne(id: number): Promise<Product | null>{
+    return this.repo.findOneBy({id});
   }
 
-  create(data: CreateProductDTO): Product{
-    const product: Product= {id: this.nextId++, ...data};
-    this.products.push(product);
-    return product;
+  create(data: CreateProductDTO): Promise<Product>{
+    const product= this.repo.create(data);
+    return this.repo.save(product);
   }
 
-  update(id: number,data: UpdateProductDto): Product | undefined{
-    const product= this.findOne(id);
-    if (!product) return undefined;
+  async update(id: number, data: UpdateProductDto): Promise<Product | null>{
+    const product= await this.findOne(id);
+    if (!product) return null;
     Object.assign(product, data);
-    return product;
+    return this.repo.save(product);
   }
 
-  remove(id: number): boolean{
-    const index= this.products.findIndex((product) => product.id === id);
-    if (index === -1) return false;
-    this.products.splice(index, 1);
-    return true;
+  async remove(id: number): Promise<boolean>{
+    const result= await this.repo.delete(id);
+    return (result.affected ?? 0) > 0;
   }
 }

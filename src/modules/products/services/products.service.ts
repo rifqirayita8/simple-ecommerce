@@ -8,32 +8,32 @@ import { UpdateProductDto } from "../dto/update-product.dto";
 export class ProductsService{
   constructor(private readonly productRepository: ProductsRepository){}
 
-  findAll(): Product[]{
+  findAll(): Promise<Product[]>{
     return this.productRepository.findAll();
   }
 
-  findOne(id: number): Product{
-    const product= this.productRepository.findOne(id);
+  async findOne(id: number): Promise<Product>{
+    const product= await this.productRepository.findOne(id);
     if (!product){
       throw new NotFoundException(`Product ${id} not found`);
     }
     return product;
   }
 
-  create(dto: CreateProductDTO): Product{
+  create(dto: CreateProductDTO): Promise<Product>{
     return this.productRepository.create(dto);
   }
 
-  update(id: number, dto: UpdateProductDto): Product{
-    const product= this.productRepository.update(id, dto);
+  async update(id: number, dto: UpdateProductDto): Promise<Product>{
+    const product= await this.productRepository.update(id, dto);
     if (!product){
       throw new NotFoundException(`Product ${id} not found`);
     }
     return product;
   }
 
-  remove(id: number): void{
-    const removed= this.productRepository.remove(id);
+  async remove(id: number): Promise<void>{
+    const removed= await this.productRepository.remove(id);
     if (!removed){
       throw new NotFoundException(`Product ${id} not found`);
     }
